@@ -113,6 +113,15 @@
       color: var(--text-color);
     }
 
+    .blank-mode .right-cell.masked,
+    .blank-mode .right-cell.masked * {
+      color: transparent !important;
+    }
+
+    .blank-mode .masked .word:hover .hidden-part {
+      color: transparent !important;
+    }
+
     .word {
       display: inline-block;
       white-space: pre;
@@ -1630,60 +1639,63 @@
   </main>
 
   <script>
-    function escapeHtml(text) {
-      return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    function decodeHtml(text) {
-      const textarea = document.createElement("textarea");
-      textarea.innerHTML = text;
-      return textarea.value;
-    }
-
-    function maskText(text) {
-      const tokens = text.match(/[\p{L}\p{N}]+|[^\p{L}\p{N}]/gu) || [];
-
-      return tokens.map(token => {
-        if (/^[\p{L}\p{N}]+$/u.test(token)) {
-          const first = escapeHtml(token.charAt(0));
-          const rest = escapeHtml(token.slice(1));
-
-          return (
-            '<span class="word">' +
-              '<span class="first-letter">' + first + '</span>' +
-              '<span class="hidden-part">' + rest + '</span>' +
-            '</span>'
-          );
-        }
-
-        return '<span class="punctuation">' + escapeHtml(token) + '</span>';
-      }).join("").replace(/\n/g, "<br>");
-    }
-
-    document.querySelectorAll(".right-cell.masked").forEach(cell => {
-      const template = cell.querySelector("template");
-      const text = decodeHtml(template.innerHTML).trim();
-
-      cell.dataset.originalText = text;
-      cell.innerHTML = maskText(text);
-    });
-
+    const modes = ["initial-mode", "full-mode", "blank-mode"];
+    let currentMode = 0;
+  
     const button = document.getElementById("toggleButton");
-
+  
+    const buttonText = {
+      "initial-mode": "Rechte Spalte vollständig anzeigen",
+      "full-mode": "Rechte Spalte ausblenden",
+      "blank-mode": "Initialen anzeigen"
+    };
+  
+    function maskCell(cell) {
+      const template = cell.querySelector("template");
+      if (!template) return;
+  
+      const text = template.content.textContent.replace(/\s+/g, " ").trim();
+      cell.textContent = "";
+  
+      const tokens = text.match(/\S+|\s+/g) || [];
+  
+      tokens.forEach(token => {
+        if (/^\s+$/.test(token)) {
+          cell.appendChild(document.createTextNode(token));
+          return;
+        }
+  
+        const wordSpan = document.createElement("span");
+        wordSpan.className = "word";
+  
+        const firstSpan = document.createElement("span");
+        firstSpan.className = "first-letter";
+        firstSpan.textContent = token.charAt(0);
+  
+        const hiddenSpan = document.createElement("span");
+        hiddenSpan.className = "hidden-part";
+        hiddenSpan.textContent = token.slice(1);
+  
+        wordSpan.appendChild(firstSpan);
+        wordSpan.appendChild(hiddenSpan);
+        cell.appendChild(wordSpan);
+      });
+    }
+  
+    document.querySelectorAll(".right-cell.masked").forEach(maskCell);
+  
+    function setMode(mode) {
+      document.body.classList.remove(...modes);
+      document.body.classList.add(mode);
+      button.textContent = buttonText[mode];
+    }
+  
     button.addEventListener("click", () => {
-      document.body.classList.toggle("initial-mode");
-
-      if (document.body.classList.contains("initial-mode")) {
-        button.textContent = "Rechte Spalte vollständig anzeigen";
-      } else {
-        button.textContent = "Nur Initialen in rechter Spalte anzeigen";
-      }
+      currentMode = (currentMode + 1) % modes.length;
+      setMode(modes[currentMode]);
     });
+  
+    setMode(modes[currentMode]);
   </script>
 </body>
 </html>
