@@ -1653,8 +1653,8 @@
       const template = cell.querySelector("template");
       if (!template) return;
   
-      const text = template.content.textContent.replace(/\s+/g, " ").trim();
-      cell.textContent = "";
+      const text = decodeHtml(template.innerHTML).trim();
+      cell.innerHTML = maskText(text);
   
       const tokens = text.match(/\S+|\s+/g) || [];
   
