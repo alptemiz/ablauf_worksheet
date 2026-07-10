@@ -52,10 +52,13 @@
     button:hover {
       background: var(--button-hover);
     }
-
-    .hint {
-      color: var(--muted-color);
-      font-size: 14px;
+  
+    .toolbar button.active {
+      background: #1e40af;
+    }
+    
+    .toolbar button:not(.active) {
+      opacity: 0.75;
     }
 
     main {
@@ -164,10 +167,9 @@
 
 <body class="initial-mode">
   <div class="toolbar">
-    <button id="toggleButton">Rechte Spalte vollständig anzeigen</button>
-    <span class="hint">
-      Initialenmodus / Vollmodus / Blank-Modus
-    </span>
+    <button id="btnFull">Vollmodus</button>
+    <button id="btnInitial">Initialenmodus</button>
+    <button id="btnBlank">Blank-Modus</button>
   </div>
 
   <main>
@@ -1683,27 +1685,26 @@
     cell.innerHTML = maskText(text);
   });
 
-  const modes = ["initial-mode", "full-mode", "blank-mode"];
-  let currentMode = 0;
-
-  const button = document.getElementById("toggleButton");
-
-  const buttonText = {
-    "initial-mode": "Rechte Spalte vollständig anzeigen",
-    "full-mode": "Rechte Spalte ausblenden",
-    "blank-mode": "Nur Initialen anzeigen"
+  const modes = ["full-mode", "initial-mode", "blank-mode"];
+  
+  const buttons = {
+    "full-mode": document.getElementById("btnFull"),
+    "initial-mode": document.getElementById("btnInitial"),
+    "blank-mode": document.getElementById("btnBlank")
   };
-
+  
   function setMode(mode) {
     document.body.classList.remove(...modes);
     document.body.classList.add(mode);
-    button.textContent = buttonText[mode];
+  
+    Object.values(buttons).forEach(btn => btn.classList.remove("active"));
+    buttons[mode].classList.add("active");
   }
-
-  button.addEventListener("click", () => {
-    currentMode = (currentMode + 1) % modes.length;
-    setMode(modes[currentMode]);
-  });
-
-  setMode(modes[currentMode]);
+  
+  buttons["full-mode"].addEventListener("click", () => setMode("full-mode"));
+  buttons["initial-mode"].addEventListener("click", () => setMode("initial-mode"));
+  buttons["blank-mode"].addEventListener("click", () => setMode("blank-mode"));
+  
+  // default
+  setMode("full-mode");
 </script>
